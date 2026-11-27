@@ -9,10 +9,26 @@ Emozioni riconosciute: **Neutro, Felice, Triste, Sorpreso, Arrabbiato**.
 
 ## Come funziona
 
+```mermaid
+flowchart LR
+    A["📷<br/><b>Webcam</b><br/>frame 1280×720<br/>a specchio<br/><i>tasto 1</i>"]
+    B["🔍<br/><b>Rilevamento volto</b><br/>YuNet<br/>box + 5 punti chiave<br/><i>tasto 2</i>"]
+    C["✂️<br/><b>Preprocessing</b><br/>ritaglio, grigio<br/>48×48 pixel<br/><i>tasto 3</i>"]
+    D["🧠<br/><b>Classificazione</b><br/>CNN TFLite<br/>5 probabilità<br/><i>tasto 4</i>"]
+    E["〰️<br/><b>Stabilizzazione</b><br/>media sugli<br/>ultimi 8 frame"]
+    F["📊<br/><b>Risultato</b><br/>emozione<br/>+ barre"]
+
+    A --> B --> C --> D --> E --> F
+
+    classDef step fill:#eef2fd,stroke:#4f7df3,stroke-width:2px,color:#1a2b4c
+    classDef net fill:#4f7df3,stroke:#2b4fb8,stroke-width:2px,color:#ffffff
+    classDef out fill:#e6f7ec,stroke:#34a853,stroke-width:2px,color:#14401f
+    class A,C,E step
+    class B,D net
+    class F out
 ```
-webcam ──► rilevamento volto ──► ritaglio 48×48 ──► CNN ──► probabilità
-           (YuNet, OpenCV)       scala di grigi     (TFLite)   per emozione
-```
+
+<sub>In blu le due reti neurali. "Tasto N" indica quale passo della demo mostra quella fase.</sub>
 
 1. **Acquisizione**: ogni frame della webcam viene specchiato (effetto specchio).
 2. **Rilevamento del volto**: [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet),
