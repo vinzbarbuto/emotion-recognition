@@ -56,10 +56,34 @@ Su macOS, al primo avvio, concedi al terminale l'accesso alla fotocamera
 
 ### Tasti
 
-| Tasto       | Azione                 |
-|-------------|------------------------|
-| `f`         | schermo intero on/off  |
-| `ESC` / `q` | esci                   |
+| Tasto       | Azione                                             |
+|-------------|----------------------------------------------------|
+| `1`         | Passo 1: l'immagine come griglia di numeri          |
+| `2`         | Passo 2: rilevamento del volto e punti chiave       |
+| `3`         | Passo 3: il volto 48×48 come lo vede il modello      |
+| `4`         | Passo 4: predizione con barre di probabilità (default) |
+| `0`         | tour automatico: passa da un passo all'altro da solo |
+| `f`         | schermo intero on/off                               |
+| `ESC` / `q` | esci                                                |
+
+### I passi, per spiegare la demo
+
+1. **L'immagine**: un riquadro ingrandisce 8×8 pixel presi tra gli occhi e ne
+   mostra i valori (0 = nero, 255 = bianco). Per il computer la foto è solo questo.
+2. **Trovo il volto**: il riquadro di YuNet, i 5 punti chiave (occhi, naso,
+   angoli della bocca) e quanto la rete è sicura che sia un volto.
+3. **Cosa vede il modello**: il ritaglio 48×48 in scala di grigi, ingrandito a
+   "quadretti". Tutto quello che la rete ha a disposizione sono 2304 numeri.
+4. **La predizione**: l'emozione più probabile e le barre con tutte le probabilità.
+
+Con più persone, il pannello completo (barre al passo 4, miniatura al passo 3)
+va solo al volto **principale**, cioè il più grande e quindi il più vicino. Gli
+altri volti hanno etichetta e una barretta colorata sotto il riquadro. Il volto
+principale cambia solo quando un altro diventa più grande del 20%
+(`MAIN_SWITCH_RATIO`), e i pannelli si posizionano evitando gli altri volti.
+
+Il riconoscimento gira sempre in sottofondo: cambiando passo cambia solo cosa
+viene disegnato.
 
 ## Parametri
 
@@ -67,6 +91,9 @@ All'inizio di `emotion_recognition.py`:
 
 | Parametro              | Default | Significato                                        |
 |------------------------|---------|----------------------------------------------------|
+| `CAMERA_INDEX`         | 1       | webcam da usare (0 = integrata, 1 = esterna; dipende dal PC) |
+| `TOUR_SECONDS`         | 6       | secondi per ogni passo nel tour automatico         |
+| `START_MODE`           | 4       | passo mostrato all'avvio                           |
 | `FACE_SCORE_THRESHOLD` | 0.8     | confidenza minima per considerare un volto         |
 | `FACE_MIN_SIZE`        | 60      | dimensione minima del volto in pixel               |
 | `CROP_MARGIN`          | 0.0     | margine extra attorno al volto prima del ritaglio  |
