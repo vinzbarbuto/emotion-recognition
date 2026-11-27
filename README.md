@@ -1,0 +1,108 @@
+# Riconoscimento delle emozioni in tempo reale
+
+Demo didattica di **machine learning** usata nelle attività di orientamento per
+studenti delle scuole superiori: la webcam inquadra i volti e una rete neurale
+riconosce l'espressione facciale, mostrando in tempo reale le probabilità per
+ciascuna emozione.
+
+Emozioni riconosciute: **Neutro, Felice, Triste, Sorpreso, Arrabbiato**.
+
+## Come funziona
+
+```
+webcam ──► rilevamento volto ──► ritaglio 48×48 ──► CNN ──► probabilità
+           (YuNet, OpenCV)       scala di grigi     (TFLite)   per emozione
+```
+
+1. **Acquisizione**: ogni frame della webcam viene specchiato (effetto specchio).
+2. **Rilevamento del volto**: [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet),
+   una piccola rete neurale inclusa in OpenCV, trova i volti nell'immagine.
+3. **Preprocessing**: ogni volto viene ritagliato, convertito in scala di grigi,
+   ridimensionato a 48×48 pixel e normalizzato in [0, 1].
+4. **Classificazione**: una rete convoluzionale (`expression_tf_lite.tflite`)
+   restituisce una probabilità per ciascuna delle 5 emozioni.
+5. **Stabilizzazione**: le predizioni vengono mediate sugli ultimi frame per
+   evitare che l'etichetta "sfarfalli".
+6. **Visualizzazione**: riquadro sul volto, emozione più probabile e barre con
+   tutte le probabilità.
+
+## Requisiti
+
+- Python 3.11
+- Webcam
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+In alternativa con conda:
+
+```bash
+conda create -n emotion python=3.11
+conda activate emotion
+pip install -r requirements.txt
+```
+
+## Avvio
+
+```bash
+python emotion_recognition.py
+```
+
+Su macOS, al primo avvio, concedi al terminale l'accesso alla fotocamera
+(Impostazioni di Sistema → Privacy e sicurezza → Fotocamera).
+
+### Tasti
+
+| Tasto       | Azione                 |
+|-------------|------------------------|
+| `f`         | schermo intero on/off  |
+| `ESC` / `q` | esci                   |
+
+## Parametri
+
+All'inizio di `emotion_recognition.py`:
+
+| Parametro              | Default | Significato                                        |
+|------------------------|---------|----------------------------------------------------|
+| `FACE_SCORE_THRESHOLD` | 0.8     | confidenza minima per considerare un volto         |
+| `FACE_MIN_SIZE`        | 60      | dimensione minima del volto in pixel               |
+| `CROP_MARGIN`          | 0.0     | margine extra attorno al volto prima del ritaglio  |
+| `SMOOTHING_FRAMES`     | 8       | numero di frame su cui mediare le predizioni       |
+| `LABELS`               | italiano | etichette (c'è anche la versione inglese commentata) |
+
+## File
+
+| File                                 | Descrizione                                   |
+|--------------------------------------|-----------------------------------------------|
+| `emotion_recognition.py`             | script principale                             |
+| `expression_tf_lite.tflite`          | modello di classificazione delle espressioni (input 48×48×1, output 5 classi) |
+| `face_detection_yunet_2023mar.onnx`  | modello di rilevamento volti YuNet            |
+
+Se il modello YuNet manca, scaricalo con:
+
+```bash
+curl -L -o face_detection_yunet_2023mar.onnx https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
+```
+
+## Privacy
+
+Lo script **non salva immagini né dati**: tutto viene elaborato in memoria, frame
+per frame. Il codice per salvare una foto (tasto `s`) è presente ma commentato:
+se lo riattivi, raccogli prima il consenso dei partecipanti (per i minorenni,
+quello dei genitori) e non usare dati personali nei nomi dei file.
+
+## Limiti (spunti per la discussione)
+
+- Il modello vede solo un'immagine 48×48 in bianco e nero: molti dettagli si perdono.
+- Occhiali, mani davanti al viso, testa girata o poca luce peggiorano le predizioni.
+- Un'espressione non è un'emozione: il modello riconosce come appare il volto,
+  non cosa prova la persona.
+- Le prestazioni dipendono dal dataset di addestramento, che può non
+  rappresentare allo stesso modo tutte le persone.
+
+## Crediti
+
+- Rilevamento volti: YuNet, [OpenCV Zoo](https://github.com/opencv/opencv_zoo) (licenza MIT).

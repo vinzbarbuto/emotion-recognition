@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+
+# Foto dei partecipanti: non vanno mai nel repo
+images/
+*.png
+*.jpg
+
+# Vecchio detector Haar, non piu' usato (sostituito da YuNet)
+haarcascade_frontalface_alt2.xml
