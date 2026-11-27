@@ -19,7 +19,7 @@ webcam ──► rilevamento volto ──► ritaglio 48×48 ──► CNN ─�
    una piccola rete neurale inclusa in OpenCV, trova i volti nell'immagine.
 3. **Preprocessing**: ogni volto viene ritagliato, convertito in scala di grigi,
    ridimensionato a 48×48 pixel e normalizzato in [0, 1].
-4. **Classificazione**: una rete convoluzionale (`expression_tf_lite.tflite`)
+4. **Classificazione**: una rete convoluzionale (`models/expression_tf_lite.tflite`)
    restituisce una probabilità per ciascuna delle 5 emozioni.
 5. **Stabilizzazione**: le predizioni vengono mediate sugli ultimi frame per
    evitare che l'etichetta "sfarfalli".
@@ -30,6 +30,28 @@ webcam ──► rilevamento volto ──► ritaglio 48×48 ──► CNN ─�
 
 - Python 3.11
 - Webcam
+- [Git LFS](https://git-lfs.com) (il modello `.tflite` è salvato con Git LFS)
+
+### Clonare il repository
+
+Installa Git LFS **prima** di clonare, altrimenti al posto del modello
+(circa 4 MB) scarichi un file di testo di 132 byte e lo script non parte:
+
+```bash
+brew install git-lfs   # macOS; su Linux: sudo apt install git-lfs
+git lfs install
+git clone https://github.com/vinzbarbuto/emotion-recognition.git
+cd emotion-recognition
+```
+
+Se hai già clonato senza Git LFS, recupera il modello con:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+### Installare le dipendenze
 
 ```bash
 python -m venv .venv
@@ -48,7 +70,7 @@ pip install -r requirements.txt
 ## Avvio
 
 ```bash
-python emotion_recognition.py
+python main.py
 ```
 
 Su macOS, al primo avvio, concedi al terminale l'accesso alla fotocamera
@@ -87,7 +109,7 @@ viene disegnato.
 
 ## Parametri
 
-All'inizio di `emotion_recognition.py`:
+Tutti in [`emotion_recognition/config.py`](emotion_recognition/config.py), l'unico file da toccare per adattare la demo:
 
 | Parametro              | Default | Significato                                        |
 |------------------------|---------|----------------------------------------------------|
@@ -98,20 +120,34 @@ All'inizio di `emotion_recognition.py`:
 | `FACE_MIN_SIZE`        | 60      | dimensione minima del volto in pixel               |
 | `CROP_MARGIN`          | 0.0     | margine extra attorno al volto prima del ritaglio  |
 | `SMOOTHING_FRAMES`     | 8       | numero di frame su cui mediare le predizioni       |
+| `MAIN_SWITCH_RATIO`    | 1.2     | quanto deve essere più grande un volto per diventare principale |
 | `LABELS`               | italiano | etichette (c'è anche la versione inglese commentata) |
 
-## File
+## Struttura del progetto
 
-| File                                 | Descrizione                                   |
-|--------------------------------------|-----------------------------------------------|
-| `emotion_recognition.py`             | script principale                             |
-| `expression_tf_lite.tflite`          | modello di classificazione delle espressioni (input 48×48×1, output 5 classi) |
-| `face_detection_yunet_2023mar.onnx`  | modello di rilevamento volti YuNet            |
+```
+emotion-recognition/
+├── main.py                    # avvio: python main.py
+├── emotion_recognition/       # codice
+│   ├── config.py              # parametri modificabili (webcam, soglie, testi, colori)
+│   ├── models.py              # le due reti: YuNet (volti) e CNN TFLite (emozioni)
+│   ├── pipeline.py            # frame -> volti ritagliati -> probabilità
+│   ├── tracking.py            # media nel tempo e scelta del volto principale
+│   ├── drawing.py             # intestazione e disegno dei 4 passi
+│   └── app.py                 # loop della webcam e tasti
+├── models/
+│   ├── expression_tf_lite.tflite          # emozioni: input 48×48×1, 5 classi (Git LFS)
+│   └── face_detection_yunet_2023mar.onnx  # rilevamento volti YuNet
+├── requirements.txt
+└── README.md
+```
+
+In alternativa a `python main.py` si può avviare anche con `python -m emotion_recognition`.
 
 Se il modello YuNet manca, scaricalo con:
 
 ```bash
-curl -L -o face_detection_yunet_2023mar.onnx https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
+curl -L -o models/face_detection_yunet_2023mar.onnx https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
 ```
 
 ## Privacy
